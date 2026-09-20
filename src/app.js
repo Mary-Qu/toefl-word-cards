@@ -534,7 +534,8 @@
 
   function renderQuizFeedback(word) {
     if (!state.practice.answered) return "";
-    return `<div class="quiz-feedback ${state.practice.correct ? "good" : "bad"}"><div><strong>${state.practice.correct ? "回答正确" : "正确答案"}</strong><span>${state.practice.correct ? "记忆已经得到加强。" : escapeHtml(word.word)}</span></div><button class="button button-paper" data-action="practice-next">下一题 ${icon("arrow", 16)}</button></div>`;
+    const correctAnswer = state.practice.mode === "choice" ? firstMeaning(word) : word.word;
+    return `<div class="quiz-feedback ${state.practice.correct ? "good" : "bad"}"><div><strong>${state.practice.correct ? "回答正确" : "正确答案"}</strong><span>${state.practice.correct ? "记忆已经得到加强。" : escapeHtml(correctAnswer)}</span></div><button class="button button-paper" data-action="practice-next">下一题 ${icon("arrow", 16)}</button></div>`;
   }
 
   function libraryWords() {
