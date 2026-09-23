@@ -10,6 +10,7 @@
   }
 
   const words = dataset.words;
+  const availableLists = Object.keys(dataset.listCounts).map(Number).sort((a, b) => a - b);
   const wordById = new Map(words.map((word) => [word.id, word]));
   const STORAGE_KEY = "margin-toefl-progress-v1";
   const today = () => {
@@ -287,9 +288,9 @@
       </section>
 
       <section class="section-block reveal delay-2">
-        <div class="section-heading"><div><span class="eyebrow">CHAPTERS 01—05</span><h2>选择单词表</h2></div><button class="text-button" data-page="library">浏览全部 ${icon("arrow", 16)}</button></div>
+        <div class="section-heading"><div><span class="eyebrow">CHAPTERS ${String(availableLists[0]).padStart(2, "0")}—${String(availableLists.at(-1)).padStart(2, "0")}</span><h2>选择单词表</h2></div><button class="text-button" data-page="library">浏览全部 ${icon("arrow", 16)}</button></div>
         <div class="list-grid">
-          ${[1, 2, 3, 4, 5].map(renderListCard).join("")}
+          ${availableLists.map(renderListCard).join("")}
         </div>
       </section>
 
@@ -325,7 +326,7 @@
     const first = listWords[0]?.word || "";
     const last = listWords.at(-1)?.word || "";
     return `<article class="list-card">
-      <div class="list-index">0${list}</div>
+      <div class="list-index">${String(list).padStart(2, "0")}</div>
       <div class="list-card-body">
         <span class="eyebrow">${listWords.length} WORDS</span>
         <h3>Word List ${list}</h3>
@@ -352,7 +353,7 @@
     return [...due, ...fresh, ...maintenance].slice(0, count).map((word) => word.id);
   }
 
-  function startStudy(selectedLists = [1, 2, 3, 4, 5], count = store.settings.sessionSize, onlyId = "") {
+  function startStudy(selectedLists = availableLists, count = store.settings.sessionSize, onlyId = "") {
     const queue = buildStudyQueue(selectedLists, count, onlyId);
     state.study = { queue, index: 0, flipped: false, retries: {}, grades: [0, 0, 0, 0], startedAt: Date.now() };
     state.page = "study";
@@ -437,7 +438,7 @@
         <fieldset>
           <legend>单词范围</legend>
           <div class="check-grid">
-            ${[1, 2, 3, 4, 5].map((list) => `<label><input type="checkbox" name="list" value="${list}" checked><span><strong>List ${list}</strong><small>${dataset.listCounts[list]} words</small></span></label>`).join("")}
+            ${availableLists.map((list) => `<label><input type="checkbox" name="list" value="${list}" checked><span><strong>List ${list}</strong><small>${dataset.listCounts[list]} words</small></span></label>`).join("")}
           </div>
         </fieldset>
         <fieldset>
@@ -553,7 +554,7 @@
   function renderLibrary() {
     return `<section class="library-toolbar reveal">
       <label class="search-field">${icon("search", 19)}<input id="library-search" type="search" placeholder="搜索单词、释义或同义词" value="${escapeHtml(state.librarySearch)}"></label>
-      <select id="library-list" aria-label="筛选单词表"><option value="all">全部单词表</option>${[1, 2, 3, 4, 5].map((list) => `<option value="${list}" ${state.libraryList === String(list) ? "selected" : ""}>Word List ${list}</option>`).join("")}</select>
+      <select id="library-list" aria-label="筛选单词表"><option value="all">全部单词表</option>${availableLists.map((list) => `<option value="${list}" ${state.libraryList === String(list) ? "selected" : ""}>Word List ${list}</option>`).join("")}</select>
       <select id="library-status" aria-label="筛选学习状态"><option value="all">全部状态</option>${[["new", "未学习"], ["learning", "学习中"], ["reviewing", "复习中"], ["mastered", "已掌握"]].map(([value, label]) => `<option value="${value}" ${state.libraryStatus === value ? "selected" : ""}>${label}</option>`).join("")}</select>
       <button class="filter-star ${state.libraryStarred ? "active" : ""}" data-action="filter-star">${icon("star", 18)} 收藏</button>
     </section>
@@ -617,7 +618,7 @@
       <article class="paper-panel activity-panel"><div class="section-heading compact"><div><span class="eyebrow">LAST 7 DAYS</span><h2>学习节奏</h2></div><strong>${activity.reduce((sum, day) => sum + day.total, 0)} 词次</strong></div><div class="activity-chart">${activity.map((day) => `<div><span class="bar-value">${day.total || ""}</span><i style="height:${Math.max(4, (day.total / maxActivity) * 100)}%"></i><small>周${day.label}</small></div>`).join("")}</div></article>
       <article class="ink-panel"><span class="eyebrow light">CURRENT</span><h2>${streakDays()}</h2><strong>连续学习天数</strong><p>今日完成 ${((store.activity[today()]?.learned || 0) + (store.activity[today()]?.reviewed || 0))} 词次</p>${icon("flame", 54)}</article>
     </section>
-    <section class="section-block reveal delay-2"><div class="section-heading"><div><span class="eyebrow">BY WORD LIST</span><h2>各单词表进度</h2></div></div><div class="chapter-progress">${[1, 2, 3, 4, 5].map((list) => {
+    <section class="section-block reveal delay-2"><div class="section-heading"><div><span class="eyebrow">BY WORD LIST</span><h2>各单词表进度</h2></div></div><div class="chapter-progress">${availableLists.map((list) => {
       const listWords = words.filter((word) => word.list === list);
       const learned = listWords.filter((word) => getProgress(word.id).seen > 0).length;
       const mastered = listWords.filter((word) => statusOf(getProgress(word.id)) === "mastered").length;

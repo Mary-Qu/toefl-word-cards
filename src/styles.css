@@ -838,8 +838,12 @@ legend {
 
 .check-grid {
   display: grid;
+  max-height: 430px;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  overflow-y: auto;
+  padding-right: 5px;
+  scrollbar-color: rgba(23, 60, 58, 0.28) transparent;
 }
 
 .check-grid label {
