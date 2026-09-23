@@ -1,6 +1,6 @@
 # Margin TOEFL 词卡
 
-Margin 是一个可以离线运行的 TOEFL 背单词网页工具。单词数据来自项目根目录中的 `Word_Lists_1-5.docx`，当前收录 405 个单词和短语。
+Margin 是一个可以离线运行的 TOEFL 背单词网页工具。单词数据来自 `Word Lists 1-35` 中的 Word 和 PDF 词表，当前收录 Word List 1–35，共 3413 个单词和短语。
 
 网页提供词卡学习、间隔复习、专项练习、词库搜索和学习统计。学习记录保存在浏览器本地，无需服务器和数据库。
 
@@ -37,7 +37,7 @@ src/
 
 ### 1. 选择单词
 
-首页显示五个 Word List 的条目数量和学习进度。点击某个 Word List 右上角的箭头，可以只学习该单词表；点击“快速学习”会混合全部单词表。
+首页显示 35 个 Word List 的条目数量和学习进度。点击某个 Word List 右上角的箭头，可以只学习该单词表；点击“快速学习”会混合全部单词表。
 
 在“词卡”页面中可以设置：
 
@@ -146,18 +146,28 @@ http://127.0.0.1:4173
 
 ## 更新单词数据
 
-解析程序会读取项目根目录中名称符合下面格式的 Word 文件：
+解析程序会按照固定顺序读取 `Word Lists 1-35(1)` 目录中的下列文件：
 
 ```text
-Word_Lists_*.docx
+Word_Lists_1-5.docx
+Word_Lists_6-10.docx
+Word Lists 11-15.txt
+Word Lists 16 to 20.docx
+Word_Lists 21-25(1).docx
+Word_List_26-30 (Final).docx
+Word_Lists_31-35.docx
 ```
 
-根目录中应当只保留一个名称符合该格式的文件。存在多个匹配文件时，解析程序只会读取找到的第一个文件。
+`Word Lists 11-15.txt` 是从原始 PDF 提取的布局文本。只有原始 PDF 发生变化时，才需要重新生成该文件。执行下面命令需要 Python 3 和 `pypdf`：
+
+```powershell
+python scripts/extract-pdf-word-lists.py "Word Lists 1-35(1)/Word Lists 11-15.pdf" "Word Lists 1-35(1)/Word Lists 11-15.txt"
+```
 
 更新步骤：
 
-1. 将新的 Word 单词表放入项目根目录。
-2. 保持文件名以 `Word_Lists_` 开头，以 `.docx` 结尾。
+1. 在对应源文件中修改单词内容。
+2. PDF 发生变化时，重新生成 `Word Lists 11-15.txt`。
 3. 在项目目录中运行：
 
 ```powershell
@@ -173,28 +183,32 @@ src/data/words.js
 当前解析规则：
 
 - `Word List N` 识别为单词表标题
-- 以音标结尾的段落识别为新单词
+- 包含英文单词和音标的段落识别为新单词
+- 支持“单词、音标、词性和释义”位于同一段的格式
 - `e.g.` 开头的段落识别为例句
+- 英文完整句子可以在缺少 `e.g.` 标记时识别为例句
 - 其余段落归入当前单词的释义
 - `[同]` 后面的内容识别为同义词
 - 原始文本会和结构化数据一起保存
 
-解析完成后会检查条目数量、重复单词、缺少例句和多条释义。
+解析完成后会检查 35 个 Word List 的条目数量、重复 ID、缺少例句、多条释义和跨表重复单词。
 
-当前解析程序针对 `Word_Lists_1-5.docx` 设置了固定数量检查：
+当前固定数量检查的汇总结果：
 
 ```text
-Word List 1: 97
-Word List 2: 76
-Word List 3: 80
-Word List 4: 87
-Word List 5: 65
-总数: 405
+Word List 1-5:   405
+Word List 6-10:  476
+Word List 11-15: 416
+Word List 16-20: 464
+Word List 21-25: 554
+Word List 26-30: 575
+Word List 31-35: 523
+总数: 3413
 ```
 
 修改现有单词的释义、音标、同义词或例句时，可以直接重新解析。增加或删除单词条目时，还需要同步修改 `scripts/parse-word-lists.mjs` 中的 `expectedCounts`。
 
-数量不符或出现重复单词会终止生成。缺少例句和多条释义属于统计项目，程序会报告数量并继续生成数据。
+数量不符或出现重复 ID 会终止生成。缺少例句、多条释义和跨表重复单词属于统计项目，程序会报告数量并继续生成数据。
 
 ## 运行项目检查
 
@@ -206,8 +220,8 @@ npm run check
 
 该命令会：
 
-1. 重新解析 Word 单词表。
-2. 检查五个 Word List 的条目数量。
+1. 重新解析 Word 和已提取的 PDF 单词表。
+2. 检查 35 个 Word List 的条目数量。
 3. 检查辅助脚本的 JavaScript 语法。
 4. 检查网页数据和主程序的 JavaScript 语法。
 
@@ -284,10 +298,14 @@ https://GitHub用户名.github.io/toefl-word-cards/
 │  └─ data/
 │     └─ words.js                  # 自动生成的单词数据
 ├─ scripts/
-│  ├─ parse-word-lists.mjs         # DOCX 单词表解析程序
+│  ├─ parse-word-lists.mjs         # DOCX/TXT 单词表解析程序
+│  ├─ extract-pdf-word-lists.py    # PDF 布局文本提取程序
 │  ├─ serve.mjs                    # 本地静态服务器
 │  └─ browser-qa.mjs               # 浏览器自动化检查
-├─ Word_Lists_1-5.docx             # 当前单词来源
+├─ Word Lists 1-35(1)/            # Word List 1–35 源文件
+│  ├─ Word Lists 11-15.pdf
+│  ├─ Word Lists 11-15.txt         # 从 PDF 提取的文本
+│  └─ 其他 Word 词表
 ├─ package.json                    # 项目命令
 └─ README.md                       # 使用说明
 ```
@@ -343,11 +361,13 @@ Pages 目录为 / (root)
 
 | 单词表 | 条目数量 |
 |---|---:|
-| Word List 1 | 97 |
-| Word List 2 | 76 |
-| Word List 3 | 80 |
-| Word List 4 | 87 |
-| Word List 5 | 65 |
-| 合计 | 405 |
+| Word List 1–5 | 405 |
+| Word List 6–10 | 476 |
+| Word List 11–15 | 416 |
+| Word List 16–20 | 464 |
+| Word List 21–25 | 554 |
+| Word List 26–30 | 575 |
+| Word List 31–35 | 523 |
+| 合计 | 3413 |
 
-其中 31 个条目在原始单词表中没有例句，64 个条目包含多条释义。网页会保留这些条目的原始释义内容。
+其中 95 个条目在原始单词表中没有例句，197 个条目包含多条释义。14 个英文单词出现在多个 Word List 中，网页会按照各自的单词表和条目 ID 分别保存学习记录。
